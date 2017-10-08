@@ -14,14 +14,13 @@
     "redis": "^2.8.0"
   },
   "devDependencies": {
-    "eslint": "^0.21.0",
     "standard": "^10.0.3"
   },
   "scripts": {
     "start": "node index.js",
     "cron": "node cron.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint ."
+    "test": "npm run lint",
+    "lint": "standard ."
   },
   "repository": {
     "type": "git",
