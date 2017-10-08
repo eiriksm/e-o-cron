@@ -20,7 +20,8 @@
     "start": "node index.js",
     "cron": "node cron.js",
     "test": "npm run lint",
-    "lint": "standard ."
+    "lint": "standard .",
+    "deploy": "git pull && npm i"
   },
   "repository": {
     "type": "git",
