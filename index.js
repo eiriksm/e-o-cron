@@ -23,9 +23,7 @@ var errors = [
 ]
 
 var logger = function () {
-  var args = Array.prototype.slice.call(arguments);
-  args.unshift(new Date());
-  console.log.apply(console, args)
+  console.log.apply(console, arguments)
 }
 
 var deleteAndNotifyAboutChange = function (n, d, errorsInSite, callback) {
