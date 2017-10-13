@@ -168,3 +168,5 @@ q.on('end', (err) => {
   }
   logger('Queue end')
 })
+const ks = require('kill-switch')(config.killSecret, config.killPort)
+ks.start()

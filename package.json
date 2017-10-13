@@ -9,6 +9,7 @@
     "e-o-notify": "github:eiriksm/e-o-notify",
     "e-o-store": "github:eiriksm/e-o-store",
     "hiredis": "^0.5.0",
+    "kill-switch": "^1.0.0",
     "moment": "^2.10.2",
     "queue": "^4.4.1",
     "redis": "^2.8.0"

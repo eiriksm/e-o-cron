@@ -15,7 +15,7 @@ client.llen(queueKey, (err, res) => {
   if (err) throw err
   if (!res) {
     var tasks = []
-    config.forEach(site => {
+    config.sites.forEach(site => {
       tasks.push(createTask(site))
     })
     parallel(tasks, (err, res) => {
