@@ -22,7 +22,8 @@
     "cron": "node cron.js",
     "test": "npm run lint",
     "lint": "standard .",
-    "deploy": "git pull && npm i"
+    "deploy": "git pull && npm i && npm run kill",
+    "kill": "node kill"
   },
   "repository": {
     "type": "git",
