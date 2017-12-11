@@ -12,9 +12,15 @@ var Eo = require('e-o')
 var eon = require('e-o-notify')
 var config = require('./config')
 var store = require('e-o-store')
+const bunyan = require('bunyan')
+let log = bunyan.createLogger({name: 'queue-starter'})
 if (!config) {
   // Should probably be thrown a long time ago, but just to be sure...
   throw new Error('Please configure this module.')
+}
+function RunLog (data) {
+  this.log = log.child({url: data.url, mail: data.email})
+  this.log.info('Creating a run log for', data.url)
 }
 var errors = [
   'down',
@@ -23,7 +29,7 @@ var errors = [
 ]
 
 var logger = function () {
-  console.log.apply(console, arguments)
+  log.info.apply(log, arguments)
 }
 
 var deleteAndNotifyAboutChange = function (n, d, errorsInSite, callback) {
@@ -33,17 +39,19 @@ var deleteAndNotifyAboutChange = function (n, d, errorsInSite, callback) {
       // as such. But first check if this is a change or not.
       var storeKey = n.url + ':' + not
       store.get(storeKey, function (err, val) {
+        if (err) {
+          throw err
+        }
         if (!val) {
           call()
           return
         }
         // This is a change, I guess. Notify about that.
-        logger('Change for the better detected for %s regarding %s. Will notify %s about the good news',
-               n.url, not, n.email)
+        logger('Change for the better detected for %s regarding %s. Will notify %s about the good news', n.url, not, n.email)
         d.fixed = true
         eon('notify-' + not, d, n, function (err) {
           if (err) {
-            console.error(err)
+            logger(err)
           } else {
             store.del(storeKey, call)
           }
@@ -54,12 +62,13 @@ var deleteAndNotifyAboutChange = function (n, d, errorsInSite, callback) {
     }
   }, function doneWithDeleting (err) {
     logger('Deleted all keys that are not active for', n.url)
-    callback()
+    callback(err)
   })
 }
 
 function checkSite (config) {
   return function (callback) {
+    var runLog = new RunLog(config)
     var n = config
     // Check this site.
     var t = new Eo({
@@ -74,15 +83,15 @@ function checkSite (config) {
     var notify = false
     var notifications = []
     t.on('error', function (type, d) {
-      logger('Had an error of type %s in site %s', type, n.url)
+      runLog.log.warn('Had an error of type %s in site %s', type, n.url)
       // Better notify then, I guess.
       notify = true
       notifications.push(type)
-    }),
+    })
     t.on('debug', function (d) {
     })
     t.on('end', function (d) {
-      logger('Process ended for site', n.url)
+      runLog.log.info('Process ended for site', n.url)
       var errorsInSite = {}
       if (notify) {
         // Add the logs to the n objecct.
@@ -97,7 +106,7 @@ function checkSite (config) {
           }
           n.checks++
           var msg = util.format('Starting run number %d of %s', n.checks, n.url)
-          logger(msg)
+          runLog.log.info(msg)
           n.logs.push({
             type: 'SYSTEM',
             timestamp: Date.now(),
@@ -108,21 +117,24 @@ function checkSite (config) {
         d.numbers.retries = n.checks
         d.logs = n.logs
         notifications.forEach(function (not) {
-          logger('Checking status of notification', not)
+          runLog.log.info('Checking status of notification', not)
           nots.push(function (cb) {
             errorsInSite[not] = true
             // See if the site is currently in that state.
             var storeKey = n.url + ':' + not
             store.get(storeKey, function (err, val) {
+              if (err) {
+                throw err
+              }
               if (val) {
                 // We have already notified.
                 var timeAgo = moment(parseInt(val, 10)).fromNow()
-                logger('Skipping notification of %s for site %s because we already sent it %s',
+                runLog.log.info('Skipping notification of %s for site %s because we already sent it %s',
                        not, n.url, timeAgo)
                 cb()
               } else {
                 store.set(storeKey, Date.now(), function () {
-                  logger('Notifying %s about the fact that %s had the error %s', n.email, n.url, not)
+                  runLog.log.info('Notifying %s about the fact that %s had the error %s', n.email, n.url, not)
                   eon('notify-' + not, d, n, cb)
                 })
               }
@@ -130,13 +142,13 @@ function checkSite (config) {
           })
         })
         async.parallel(nots, function () {
-          logger('Sent all notifications for', n.url)
+          runLog.log.info('Sent all notifications for', n.url)
           // Delete keys that are not active still.
           deleteAndNotifyAboutChange(n, d, errorsInSite, callback)
         })
       }
       if (!notify && d.screenshot) {
-        logger('No errors for', n.url)
+        runLog.log.info('No errors for', n.url)
         deleteAndNotifyAboutChange(n, d, {}, function () {
           fs.unlink(d.screenshot.trim(), callback)
         })

@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "async": "^2.5.0",
+    "bunyan": "^1.8.12",
     "e-o": "github:eiriksm/e-o",
     "e-o-notify": "github:eiriksm/e-o-notify",
     "e-o-store": "github:eiriksm/e-o-store",
