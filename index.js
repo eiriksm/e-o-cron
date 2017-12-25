@@ -2,6 +2,7 @@
 var fs = require('fs')
 var util = require('util')
 const queue = require('queue')
+const https = require('https')
 
 let q = queue()
 
@@ -10,11 +11,11 @@ var moment = require('moment')
 
 var Eo = require('e-o')
 var eon = require('e-o-notify')
-var config = require('./config')
+var globalConfig = require('./config')
 var store = require('e-o-store')
 const bunyan = require('bunyan')
 let log = bunyan.createLogger({name: 'queue-starter'})
-if (!config) {
+if (!globalConfig) {
   // Should probably be thrown a long time ago, but just to be sure...
   throw new Error('Please configure this module.')
 }
@@ -80,6 +81,11 @@ function checkSite (config) {
       ignoreSsl: n.ignoreSsl,
       ignore: n.ignore
     })
+    // Ping into healthchecks.
+    if (globalConfig.healthchecker) {
+      runLog.log.info('Pinging healthckecker')
+      https.get(globalConfig.healthchecker)
+    }
     var notify = false
     var notifications = []
     t.on('error', function (type, d) {
@@ -163,8 +169,7 @@ store.listen((channel, message) => {
   let messageSite
   try {
     messageSite = JSON.parse(message)
-  }
-  catch (error) {
+  } catch (error) {
     logger('Problem with a message received')
     return
   }
@@ -180,5 +185,5 @@ q.on('end', (err) => {
   }
   logger('Queue end')
 })
-const ks = require('kill-switch')(config.killSecret, config.killPort)
+const ks = require('kill-switch')(globalConfig.killSecret, globalConfig.killPort)
 ks.start()

@@ -1,8 +1,8 @@
 const eos = require('e-o-store')
 const redis = require('redis')
-const queueKey = 'eoqueue';
+const queueKey = 'eoqueue'
 const config = require('./config')
-const parallel = require('async/parallel');
+const parallel = require('async/parallel')
 let client = redis.createClient()
 
 function createTask (site) {
