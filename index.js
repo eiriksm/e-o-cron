@@ -153,10 +153,14 @@ function checkSite (config) {
           deleteAndNotifyAboutChange(n, d, errorsInSite, callback)
         })
       }
-      if (!notify && d.screenshot) {
+      if (!notify) {
         runLog.log.info('No errors for', n.url)
         deleteAndNotifyAboutChange(n, d, {}, function () {
-          fs.unlink(d.screenshot.trim(), callback)
+          if (d.screenshot) {
+            fs.unlink(d.screenshot.trim(), callback)
+          } else {
+            callback()
+          }
         })
       }
     })
