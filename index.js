@@ -79,6 +79,7 @@ function checkSite (config) {
         resourceError: true
       },
       ignoreSsl: n.ignoreSsl,
+      auth: n.auth,
       ignore: n.ignore
     })
     // Ping into healthchecks.
