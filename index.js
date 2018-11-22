@@ -96,6 +96,14 @@ function checkSite (config) {
       notifications.push(type)
     })
     t.on('debug', function (d) {
+      d.forEach((item) => {
+        n.logs = n.logs || []
+        n.logs.push({
+          type: item.type,
+          timestamp: item.timestamp,
+          message: item.message
+        })
+      })
     })
     t.on('end', function (d) {
       runLog.log.info('Process ended for site', n.url)
