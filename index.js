@@ -72,7 +72,7 @@ function checkSite (config) {
     var runLog = new RunLog(config)
     var n = config
     // Check this site.
-    var t = new Eo({
+    let eoconfig = {
       url: n.url,
       errors: {
         pageerror: true,
@@ -81,7 +81,11 @@ function checkSite (config) {
       ignoreSsl: n.ignoreSsl,
       auth: n.auth,
       ignore: n.ignore
-    })
+    }
+    if (globalConfig.browserWSEndpoint) {
+      eoconfig.browserWSEndpoint = globalConfig.browserWSEndpoint
+    }
+    var t = new Eo(eoconfig)
     // Ping into healthchecks.
     if (globalConfig.healthchecker) {
       runLog.log.info('Pinging healthckecker')
