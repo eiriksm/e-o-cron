@@ -226,14 +226,14 @@ ks.start()
 let server
 const startIt = (cb) => {
   server = http.createServer((req, res) => {
-    if (req.url === util.format('/data/%s', config.secret)) {
+    if (req.url === util.format('/data/%s', globalConfig.killSecret)) {
       res.statusCode = 200
       res.setHeader('Content-Type', 'application/json')
-      res.send(JSON.stringify({
+      res.end(JSON.stringify({
         config: globalConfig,
         data: eos.all()
       }))
-      
+      return
     }
     res.statusCode = 403
     res.setHeader('Content-Type', 'text/plain')
