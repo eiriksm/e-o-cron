@@ -1,5 +1,8 @@
 'use strict'
 var fs = require('fs')
+const http = require('http')
+const parallel = require('async/parallel')
+const eos = require('e-o-store')
 var util = require('util')
 const queue = require('queue')
 const https = require('https')
@@ -181,6 +184,21 @@ function checkSite (config) {
   }
 }
 
+setInterval(_ => {
+  function createTask (site) {
+    return function (callback) {
+      eos.append(JSON.stringify(site), callback)
+    }
+  }
+  var tasks = []
+  globalConfig.sites.forEach(site => {
+    tasks.push(createTask(site))
+  })
+  parallel(tasks, (err, res) => {
+    if (err) throw err
+  })
+}, globalConfig.interval ?? 60 * 1000)
+
 store.listen((channel, message) => {
   logger('Got notification for change')
   let messageSite
@@ -204,3 +222,26 @@ q.on('end', (err) => {
 })
 const ks = require('kill-switch')(globalConfig.killSecret, globalConfig.killPort)
 ks.start()
+
+let server
+const startIt = (cb) => {
+  server = http.createServer((req, res) => {
+    if (req.url === util.format('/data/%s', config.secret)) {
+      res.statusCode = 200
+      res.setHeader('Content-Type', 'application/json')
+      res.send(JSON.stringify({
+        config: globalConfig,
+        data: eos.all()
+      }))
+      
+    }
+    res.statusCode = 403
+    res.setHeader('Content-Type', 'text/plain')
+    res.end()
+  })
+
+  server.listen(3000, '0.0.0.0', _ => {
+    console.log('server lsitening yeah')
+  })
+}
+startIt()

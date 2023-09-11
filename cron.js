@@ -3,7 +3,8 @@ const redis = require('redis')
 const queueKey = 'eoqueue'
 const config = require('./config')
 const parallel = require('async/parallel')
-let client = redis.createClient()
+let client = redis.createClient(config.redisConnection)
+eos.start(config.redisConnection)
 
 function createTask (site) {
   return function (callback) {
